@@ -5,11 +5,10 @@ import com.nitesh.usermanagement.dto.UserRequestDTO;
 import com.nitesh.usermanagement.dto.UserResponseDTO;
 import com.nitesh.usermanagement.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Page;
-
 
 import java.util.List;
 
@@ -33,9 +32,7 @@ public class UserController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("User created successfully", response));
-
     }
-
 
     // ================= GET ALL USERS =================
     @GetMapping
@@ -49,7 +46,6 @@ public class UserController {
         );
     }
 
-
     // ================= GET USER BY ID =================
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserResponseDTO>> getUserById(
@@ -62,7 +58,6 @@ public class UserController {
                 )
         );
     }
-
 
     // ================= UPDATE USER =================
     @PutMapping("/{id}")
@@ -78,7 +73,6 @@ public class UserController {
         );
     }
 
-
     // ================= DELETE USER =================
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
@@ -86,8 +80,8 @@ public class UserController {
         return ResponseEntity.noContent().build(); // 204
     }
 
-    // ================== GET USERS WITH PAGINATION ==================
-    @GetMapping("/paged")
+    // ================= GET USERS WITH PAGINATION =================
+    @GetMapping("/page")
     public ResponseEntity<ApiResponse<Page<UserResponseDTO>>> getUsersPaginated(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
@@ -106,10 +100,7 @@ public class UserController {
         );
     }
 
-    // ================== SEARCH USERS ==================
-// Example:
-// /api/users/search?name=Nitesh
-// /api/users/search?email=gmail
+    // ================= SEARCH USERS =================
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<List<UserResponseDTO>>> searchUsers(
             @RequestParam(required = false) String name,
@@ -122,8 +113,4 @@ public class UserController {
                 ApiResponse.success("Users fetched successfully", users)
         );
     }
-
-
-
-
 }

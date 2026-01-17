@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +45,8 @@ class UserServiceTest {
         assertEquals(1L, response.getId());
         assertEquals("Nitesh", response.getName());
         assertEquals("nitesh@gmail.com", response.getEmail());
+
+        verify(userRepository, times(1)).save(any(User.class));
     }
 
     // ---------- GET BY ID ----------
@@ -58,8 +61,19 @@ class UserServiceTest {
 
         UserResponseDTO response = userService.getUserById(1L);
 
+        assertEquals(1L, response.getId());
         assertEquals("Nitesh", response.getName());
+        assertEquals("nitesh@gmail.com", response.getEmail());
+
+        verify(userRepository).findById(1L);
     }
+
+    @Test
+    void searchUsers_bothParamsProvided_returnsEmpty() {
+        // both name & email provided → current service logic returns empty
+        assertTrue(userService.searchUsers("test", "gmail").isEmpty());
+    }
+
 
     @Test
     void getUserById_notFound() {
@@ -67,6 +81,8 @@ class UserServiceTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> userService.getUserById(99L));
+
+        verify(userRepository).findById(99L);
     }
 
     // ---------- GET ALL ----------
@@ -87,12 +103,19 @@ class UserServiceTest {
         List<UserResponseDTO> users = userService.getAllUsers();
 
         assertEquals(2, users.size());
+
+        verify(userRepository).findAll();
     }
 
     @Test
     void getAllUsers_empty() {
         when(userRepository.findAll()).thenReturn(List.of());
-        assertTrue(userService.getAllUsers().isEmpty());
+
+        List<UserResponseDTO> users = userService.getAllUsers();
+
+        assertTrue(users.isEmpty());
+
+        verify(userRepository).findAll();
     }
 
     // ---------- UPDATE ----------
@@ -112,6 +135,9 @@ class UserServiceTest {
 
         assertEquals("New", response.getName());
         assertEquals("new@gmail.com", response.getEmail());
+
+        verify(userRepository).findById(1L);
+        verify(userRepository).save(user);
     }
 
     @Test
@@ -120,6 +146,9 @@ class UserServiceTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> userService.updateUser(1L, new UserRequestDTO("X", "x@gmail.com")));
+
+        verify(userRepository).findById(1L);
+        verify(userRepository, never()).save(any());
     }
 
     // ---------- DELETE ----------
@@ -132,6 +161,7 @@ class UserServiceTest {
 
         userService.deleteUser(1L);
 
+        verify(userRepository).findById(1L);
         verify(userRepository).delete(user);
     }
 
@@ -141,6 +171,9 @@ class UserServiceTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> userService.deleteUser(1L));
+
+        verify(userRepository).findById(1L);
+        verify(userRepository, never()).delete(any());
     }
 
     // ---------- PAGINATION ----------
@@ -159,6 +192,8 @@ class UserServiceTest {
                 userService.getUsersPaginated(0, 5, "id", "asc");
 
         assertEquals(1, result.getTotalElements());
+
+        verify(userRepository).findAll(any(Pageable.class));
     }
 
     @Test
@@ -170,6 +205,8 @@ class UserServiceTest {
                 userService.getUsersPaginated(0, 5, "id", "asc");
 
         assertTrue(result.isEmpty());
+
+        verify(userRepository).findAll(any(Pageable.class));
     }
 
     // ---------- SEARCH ----------
@@ -183,7 +220,11 @@ class UserServiceTest {
         when(userRepository.findByNameContainingIgnoreCase("Nit"))
                 .thenReturn(List.of(user));
 
-        assertEquals(1, userService.searchUsers("Nit", null).size());
+        List<UserResponseDTO> result = userService.searchUsers("Nit", null);
+
+        assertEquals(1, result.size());
+
+        verify(userRepository).findByNameContainingIgnoreCase("Nit");
     }
 
     @Test
@@ -196,11 +237,19 @@ class UserServiceTest {
         when(userRepository.findByEmailContainingIgnoreCase("gmail"))
                 .thenReturn(List.of(user));
 
-        assertEquals(1, userService.searchUsers(null, "gmail").size());
+        List<UserResponseDTO> result = userService.searchUsers(null, "gmail");
+
+        assertEquals(1, result.size());
+
+        verify(userRepository).findByEmailContainingIgnoreCase("gmail");
     }
 
     @Test
     void searchUsers_noParams() {
-        assertTrue(userService.searchUsers(null, null).isEmpty());
+        List<UserResponseDTO> result = userService.searchUsers(null, null);
+
+        assertTrue(result.isEmpty());
+
+        verifyNoInteractions(userRepository);
     }
 }
