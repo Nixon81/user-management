@@ -21,6 +21,11 @@ public class UserRequestDTO {
         return name;
     }
 
+    public UserRequestDTO(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
